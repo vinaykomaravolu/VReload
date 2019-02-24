@@ -6,6 +6,8 @@
 #include <thread>
 #include <unordered_map>
 #include <string>
+#include <windows.h>
+
 
 using namespace std;
 namespace fs = experimental::filesystem;
@@ -26,10 +28,13 @@ public:
 
 			//add path to unordered map
 			fileWriteTimes.insert(make_pair(p.path().string(), cftime));
+			
 		}
+		cout << "INIT" << endl;
 	}
 
 	void watch() {
+		//To account for removed or name changed file
 		unordered_map<string, time_t> tempfileWriteTimes;
 		for (auto &p : fs::recursive_directory_iterator(pathWatch)) {
 			fs::path currentPath = p.path();
@@ -48,6 +53,12 @@ public:
 			if (previousLastWriteTime != currentLastWriteTime) {
 				tempfileWriteTimes.insert(make_pair(currentPath.string(), currentLastWriteTime));
 				cout << currentPath << endl;
+				//___________________________________________________TEST
+				string command = "/C g++ -o main " + currentPath.string();
+				cout << command;
+				ShellExecute(0, "open", "cmd.exe", command.c_str(), 0, SW_HIDE);
+
+				//___________________________________________________TEST
 			}
 			else {
 				tempfileWriteTimes.insert(make_pair(currentPath.string(), previousLastWriteTime));
