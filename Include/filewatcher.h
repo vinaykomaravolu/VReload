@@ -15,56 +15,66 @@ using namespace std::chrono_literals;
 class FileWatcher {
 public:
 	string pathWatch;
+	thread fileWatcherThread;
+	bool fileWatcherThreadEnable = false;
+	bool fileWatcherThreadCreated = false;
+	int delayTime; //In milliseconds
 	unordered_map<string, time_t> fileWriteTimes;
 
-	FileWatcher(string pathWatch) {
+	FileWatcher(string pathWatch,int timeDelay) {
 		this->pathWatch = pathWatch;
+		this->delayTime = timeDelay;
+
+		//Initial File Check
 		for (auto &p : fs::recursive_directory_iterator(pathWatch)) {
 
 			//Check and convert current paths' last write time 
 			auto ftime = fs::last_write_time(p.path());
 			time_t cftime = decltype(ftime)::clock::to_time_t(ftime);
-			//auto lastWriteTime =  std::asctime(std::localtime(&cftime));
+			//Auto lastWriteTime =  std::asctime(std::localtime(&cftime));
 
-			//add path to unordered map
+			//Add path to unordered map
 			fileWriteTimes.insert(make_pair(p.path().string(), cftime));
 			
 		}
-		cout << "INIT" << endl;
 	}
 
-	void watch() {
-		//To account for removed or name changed file
-		unordered_map<string, time_t> tempfileWriteTimes;
-		for (auto &p : fs::recursive_directory_iterator(pathWatch)) {
-			fs::path currentPath = p.path();
-			auto ftime = fs::last_write_time(currentPath);
-			time_t currentLastWriteTime = decltype(ftime)::clock::to_time_t(ftime);
-			//check if path exists in map
-			//if path does not exist then it is created or modified
-			if (fileWriteTimes.count(currentPath.string()) == 0) {
-				tempfileWriteTimes.insert(make_pair(currentPath.string(), currentLastWriteTime));
-				cout << currentPath << endl;
-			}
-			time_t previousLastWriteTime = fileWriteTimes[currentPath.string()];
+	void checkFilesForChange() {
 
-			//if the file has been changed then print the path and return from the function
-			//also update path last write time
-			if (previousLastWriteTime != currentLastWriteTime) {
-				tempfileWriteTimes.insert(make_pair(currentPath.string(), currentLastWriteTime));
-				cout << currentPath << endl;
-				//___________________________________________________TEST
-				string command = "/C g++ -o main " + currentPath.string();
-				cout << command;
-				ShellExecute(0, "open", "cmd.exe", command.c_str(), 0, SW_HIDE);
+		//Delay thread for processing
+		this_thread::sleep_for(chrono::seconds(delayTime));
 
-				//___________________________________________________TEST
+		while (fileWatcherThreadEnable) {
+			//To account for removed or name changed file
+			unordered_map<string, time_t> tempfileWriteTimes;
+			for (auto &p : fs::recursive_directory_iterator(pathWatch)) {
+				fs::path currentPath = p.path();
+				auto ftime = fs::last_write_time(currentPath);
+				time_t currentLastWriteTime = decltype(ftime)::clock::to_time_t(ftime);
+				//check if path exists in map
+				//if path does not exist then it is created or modified
+				if (fileWriteTimes.count(currentPath.string()) == 0) {
+					tempfileWriteTimes.insert(make_pair(currentPath.string(), currentLastWriteTime));
+					cout << currentPath << endl;
+				}
+				time_t previousLastWriteTime = fileWriteTimes[currentPath.string()];
+
+				//if the file has been changed then print the path and return from the function
+				//also update path last write time
+				if (previousLastWriteTime != currentLastWriteTime) {
+					tempfileWriteTimes.insert(make_pair(currentPath.string(), currentLastWriteTime));
+					cout << currentPath << endl;
+				}
+				else {
+					tempfileWriteTimes.insert(make_pair(currentPath.string(), previousLastWriteTime));
+				}
 			}
-			else {
-				tempfileWriteTimes.insert(make_pair(currentPath.string(), previousLastWriteTime));
-			}
+			fileWriteTimes = tempfileWriteTimes;
+
+			//Delay thread for processing
+			this_thread::sleep_for(chrono::seconds(delayTime));
 		}
-		fileWriteTimes = tempfileWriteTimes;
+		fileWatcherThreadCreated = false;
 	}
 
 	void displayAllPaths() {
@@ -72,4 +82,23 @@ public:
 			cout << iter->first << endl;
 		}
 	}
+
+	void execute() {
+		if (fileWatcherThreadCreated == false) {
+			fileWatcherThreadCreated = true;
+			cout << "Watching File: " << pathWatch << endl;
+			fileWatcherThreadEnable = true;
+			fileWatcherThread = thread(&FileWatcher::checkFilesForChange, this);
+			fileWatcherThread.detach();
+		}
+		else {
+			cout << "Already Watching File: " << pathWatch << endl;
+		}
+	}
+
+	void terminate() {
+		fileWatcherThreadEnable = false;
+		cout << "Stopped Watching: " << pathWatch << endl;
+	}
+
 };

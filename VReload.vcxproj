@@ -129,6 +129,10 @@
     <ClCompile Include="Include\filewatcher.h" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="Test\file1.txt" />
+    <Text Include="Test\file2.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

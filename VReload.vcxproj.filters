@@ -22,4 +22,8 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="Test\file1.txt" />
+    <Text Include="Test\file2.txt" />
+  </ItemGroup>
 </Project>
