@@ -33,7 +33,7 @@ public:
 };
 
 int main() {
-	string filePath;
+	/*string filePath;
 	FileWatcher fw("C:\\Users\\Main\\Desktop\\Project\\Reload\\VReload\\Test",1);
 	FileWatcher fw2("C:\\Users\\Main\\Desktop\\Test",1);
 	A b(10);
@@ -52,8 +52,17 @@ int main() {
 	fw.execute();
 
 	this_thread::sleep_for(std::chrono::seconds(50));
+	*/
 	
-	
+	Watcher w;
+	w.watchFile("C:\\Users\\Main\\Desktop\\Project\\Reload\\VReload\\Test");
+	w.watchFile("C:\\Users\\Main\\Desktop\\Test");
+
+	w.executeAll();
+	this_thread::sleep_for(std::chrono::seconds(2));
+	w.displayFileWatchers();
+
+	this_thread::sleep_for(std::chrono::seconds(50));
 	return 0;
 }
 

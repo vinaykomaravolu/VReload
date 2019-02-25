@@ -7,11 +7,14 @@
 #include <unordered_map>
 #include <string>
 #include <windows.h>
+#include <vector>
 
 
 using namespace std;
 namespace fs = experimental::filesystem;
 using namespace std::chrono_literals;
+
+
 class FileWatcher {
 public:
 	string pathWatch;
@@ -83,6 +86,10 @@ public:
 		}
 	}
 
+	string getPathName() {
+		return pathWatch;
+	}
+
 	void execute() {
 		if (fileWatcherThreadCreated == false) {
 			fileWatcherThreadCreated = true;
@@ -101,4 +108,43 @@ public:
 		cout << "Stopped Watching: " << pathWatch << endl;
 	}
 
+};
+
+class Watcher {
+public:
+	vector<FileWatcher> fileWatchers;
+
+	Watcher() {
+		//Default Constructor
+	}
+
+	void watchFile(string pathWatch, int timeDelay = 1) {
+		fileWatchers.push_back(FileWatcher(pathWatch, timeDelay));
+	}
+
+	void displayFileWatchers() {
+		cout << "Watching:" << endl;
+		for (int i = 0; i < fileWatchers.size(); i++) {
+			cout << "   [" << i << "]: " << fileWatchers[i].getPathName() << endl;
+		}
+	}
+
+	void displayFileWatcher(int index) {
+		if (index < 0 && index < fileWatchers.size()) {
+			return;
+		}
+		cout << "[" << index << "]: " << fileWatchers[index].getPathName() << endl;
+	}
+
+	void executeAll() {
+		for (int i = 0; i < fileWatchers.size(); i++) {
+			fileWatchers[i].execute();
+		}
+	}
+
+	void terminateAll() {
+		for (int i = 0; i < fileWatchers.size(); i++) {
+			fileWatchers[i].terminate();
+		}
+	}
 };
