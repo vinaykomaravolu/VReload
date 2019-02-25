@@ -110,6 +110,7 @@ public:
 
 };
 
+//A file watcher manager
 class Watcher {
 public:
 	vector<FileWatcher> fileWatchers;
