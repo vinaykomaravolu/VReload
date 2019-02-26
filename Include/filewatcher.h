@@ -8,24 +8,32 @@
 #include <string>
 #include <windows.h>
 #include <vector>
+#include <functional>
 
 
 using namespace std;
 namespace fs = experimental::filesystem;
 using namespace std::chrono_literals;
 
+struct Params {
+
+};
+
 
 class FileWatcher {
 public:
 	string pathWatch;
 	thread fileWatcherThread;
+	int delayTime; //In milliseconds
 	bool fileWatcherThreadEnable = false;
 	bool fileWatcherThreadCreated = false;
-	int delayTime; //In milliseconds
+	function<int()> functionOnFileChange;
 	unordered_map<string, time_t> fileWriteTimes;
 
-	FileWatcher(string pathWatch,int timeDelay) {
+
+	FileWatcher(string pathWatch, function<int()> functionOnFileChange ,int timeDelay) {
 		this->pathWatch = pathWatch;
+		this->functionOnFileChange = functionOnFileChange;
 		this->delayTime = timeDelay;
 
 		//Initial File Check
@@ -62,11 +70,17 @@ public:
 				}
 				time_t previousLastWriteTime = fileWriteTimes[currentPath.string()];
 
-				//if the file has been changed then print the path and return from the function
+				//if the file has been changed then execute function and return from the function
 				//also update path last write time
 				if (previousLastWriteTime != currentLastWriteTime) {
 					tempfileWriteTimes.insert(make_pair(currentPath.string(), currentLastWriteTime));
-					cout << currentPath << endl;
+					if (functionOnFileChange) {
+						thread functionThread = thread(this->functionOnFileChange);
+						functionThread.detach();
+					}
+					else {//If no function on file change being called then just prints the file that has changed!
+						cout << "File Changed: " << currentPath.string();
+					}
 				}
 				else {
 					tempfileWriteTimes.insert(make_pair(currentPath.string(), previousLastWriteTime));
@@ -119,8 +133,8 @@ public:
 		//Default Constructor
 	}
 
-	void watchFile(string pathWatch, int timeDelay = 1) {
-		fileWatchers.push_back(FileWatcher(pathWatch, timeDelay));
+	void watchFile(string pathWatch, function<int()> functionOnFileChange = NULL, int timeDelay = 1) {
+		fileWatchers.push_back(FileWatcher(pathWatch, functionOnFileChange,timeDelay));
 	}
 
 	void displayFileWatchers() {

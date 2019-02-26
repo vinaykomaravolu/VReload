@@ -2,6 +2,7 @@
 #include <filewatcher.h>
 #include <thread>
 #include <chrono>
+#include <functional>
 
 
 //Thread Testing
@@ -29,6 +30,23 @@ public:
 
 	void destroy() {
 		terminateThread = true;
+	}
+};
+
+int a() {
+	while (true) {
+		this_thread::sleep_for(std::chrono::seconds(2));
+		cout << this_thread::get_id() << endl;
+	}
+	return 0;
+};
+
+
+
+
+void test(std::function<int()> b) {
+	if (b) {
+		b();
 	}
 };
 
