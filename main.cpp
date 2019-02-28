@@ -25,7 +25,7 @@ public:
 
 	void execute() {
 		terminateThread = false;
-		std::thread{ &A::printInf,this }.detach();
+		std::thread(&A::printInf,this);
 	}
 
 	void destroy() {
@@ -76,9 +76,10 @@ int main() {
 	w.watchFile("C:\\Users\\Main\\Desktop\\Project\\Reload\\VReload\\Test");
 	w.watchFile("C:\\Users\\Main\\Desktop\\Test");
 
-	w.executeAll();
+	
+
 	this_thread::sleep_for(std::chrono::seconds(2));
-	w.displayFileWatchers();
+	//w.displayFileWatchers();
 
 	this_thread::sleep_for(std::chrono::seconds(50));
 	return 0;
