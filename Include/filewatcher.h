@@ -73,78 +73,46 @@ public:
 		return pathWatch;
 	}
 
-	// ALways runs on seperate thread
-	void checkFilesForChange() {
 
-		//Delay thread for processing
-		//this_thread::sleep_for(chrono::seconds(delayTime));
-
-		while (fileWatcherThreadEnable) {
-			// Temperarary data for file/directories write times, modified file/directories, deleted file/directories, and new file/directories
-			unordered_map<string, time_t> tempfileWriteTimes;
-			vector<fs::path> tempModifedFileDirectories;
-			vector<fs::path> tempDeletedFileDirectories;
-			vector<fs::path> tempNewFileDirectories;
-
-			for (auto &p : fs::recursive_directory_iterator(pathWatch)) {
-				fs::path currentPath = p;
-				auto ftime = fs::last_write_time(currentPath);
-				time_t currentLastWriteTime = decltype(ftime)::clock::to_time_t(ftime);
-
-				tempfileWriteTimes.insert(make_pair(currentPath.string(), currentLastWriteTime));
-				if (fileWriteTimes.count(currentPath.string()) == 0) { // New File/Directories
-					tempNewFileDirectories.push_back(currentPath);
-				}
-				else {
-					time_t previousLastWriteTime = fileWriteTimes[currentPath.string()];
-					if (previousLastWriteTime != currentLastWriteTime) {
-						tempModifedFileDirectories.push_back(currentPath);
-					}
-				}
-				
-			}
-			for (const auto& p : fileWriteTimes) {
-				if (tempfileWriteTimes.count(p.first) == 0) { //Deleted File/Directories
-					tempDeletedFileDirectories.push_back(p.first);
-				}	
-			}
-
-			deletedFileDirectories = tempDeletedFileDirectories;
-			newFileDirectories = tempNewFileDirectories;
-			modifedFileDirectories = tempModifedFileDirectories;
-			fileWriteTimes = tempfileWriteTimes;
-
-			// Check to see if file is created, deleted, or modified
-			if (deletedFileDirectories.size() != 0 || newFileDirectories.size() != 0 || modifedFileDirectories.size() != 0 && fileDirectoryAllFunctionEnable) {
-				if (functionOnFileChange) {
-					createNewFunctionThreadD(functionOnFileChange);
-				}
-				else {//If no function on file change being called then just prints the file that has changed!
-					thread functionThread = thread(&FileWatcher::displayAllData,this);
-					functionThread.detach();
-				}
-			}
-			else {
-				if (deletedFileDirectories.size() != 0 && fileDirectoryDeleteFunctionEnable) {
-					
-					displayData(deletedFileDirectories, "Deleted");
-				}
-
-				if (newFileDirectories.size() != 0 && fileDirectoryDeleteFunctionEnable) {
-					displayData(newFileDirectories, "New");
-				}
-
-				if (modifedFileDirectories.size() != 0 && fileDirectoryModifiedFunctionEnable) {
-					displayData(modifedFileDirectories, "Modified");
-				}
-			}
-
-			//Delay thread for processing
-			this_thread::sleep_for(chrono::seconds(delayTime));
-		}
+	void onAllChangeFunction(function<int()> function) {
+		functionOnFileChange = function;
+	}
+	
+	void onDeleteFunction(function<int()> function) {
+		functionOnDeleteFileChange = function;
 	}
 
-	
+	void onModifiedFunction(function<int()> function) {
+		functionOnModifiedFileChange = function;
+	}
+
+	void onNewFunction(function<int()> function) {
+		functionOnNewFileChange = function;
+	}
+
+	void onAllChangeFunctionEnable() {
+		fileDirectoryAllFunctionEnable = true;
+		fileDirectoryModifiedFunctionEnable = false;
+		fileDirectoryNewFunctionEnable = false;
+		fileDirectoryDeleteFunctionEnable = false;
+	}
+
+	void onDeleteFunctionEnable() {
+		fileDirectoryAllFunctionEnable = false;
+		fileDirectoryDeleteFunctionEnable = true;
+	}
+
+	void onNewFunctionEnable() {
+		fileDirectoryAllFunctionEnable = false;
+		fileDirectoryNewFunctionEnable = true;
+
+	}
+
+	void onModifiedFunctionEnable() {
+		fileDirectoryAllFunctionEnable = false;
+		fileDirectoryModifiedFunctionEnable = true;
+
+	}
 
 	void execute() {
 		if (!fileWatcherThreadCreated) {
@@ -193,6 +161,94 @@ private:
 	void createNewFunctionThread(function<int()> functionOnFileChange) {
 		thread functionThread = thread(functionOnFileChange);
 		functionThread.join();
+	}
+
+	// ALways runs on seperate thread
+	void checkFilesForChange() {
+
+		//Delay thread for processing
+		//this_thread::sleep_for(chrono::seconds(delayTime));
+
+		while (fileWatcherThreadEnable) {
+			// Temperarary data for file/directories write times, modified file/directories, deleted file/directories, and new file/directories
+			unordered_map<string, time_t> tempfileWriteTimes;
+			vector<fs::path> tempModifedFileDirectories;
+			vector<fs::path> tempDeletedFileDirectories;
+			vector<fs::path> tempNewFileDirectories;
+
+			for (auto &p : fs::recursive_directory_iterator(pathWatch)) {
+				fs::path currentPath = p;
+				auto ftime = fs::last_write_time(currentPath);
+				time_t currentLastWriteTime = decltype(ftime)::clock::to_time_t(ftime);
+
+				tempfileWriteTimes.insert(make_pair(currentPath.string(), currentLastWriteTime));
+				if (fileWriteTimes.count(currentPath.string()) == 0) { // New File/Directories
+					tempNewFileDirectories.push_back(currentPath);
+				}
+				else {
+					time_t previousLastWriteTime = fileWriteTimes[currentPath.string()];
+					if (previousLastWriteTime != currentLastWriteTime) {
+						tempModifedFileDirectories.push_back(currentPath);
+					}
+				}
+
+			}
+			for (const auto& p : fileWriteTimes) {
+				if (tempfileWriteTimes.count(p.first) == 0) { //Deleted File/Directories
+					tempDeletedFileDirectories.push_back(p.first);
+				}
+			}
+
+			deletedFileDirectories = tempDeletedFileDirectories;
+			newFileDirectories = tempNewFileDirectories;
+			modifedFileDirectories = tempModifedFileDirectories;
+			fileWriteTimes = tempfileWriteTimes;
+
+			// Check to see if file is created, deleted, or modified
+			if (fileDirectoryAllFunctionEnable && deletedFileDirectories.size() != 0 || newFileDirectories.size() != 0 || modifedFileDirectories.size() != 0) {
+				if (functionOnFileChange) {
+					createNewFunctionThreadD(functionOnFileChange);
+				}
+				else {//If no function on file change being called then just prints the file that has changed!
+					thread functionThread = thread(&FileWatcher::displayAllData, this);
+					functionThread.detach();
+				}
+			}
+			else {
+				if (deletedFileDirectories.size() != 0 && fileDirectoryDeleteFunctionEnable) {
+					if (functionOnDeleteFileChange) {
+						createNewFunctionThreadD(functionOnDeleteFileChange);
+					}
+					else {
+						thread functionThread = thread(&FileWatcher::displayData, this, deletedFileDirectories, "Deleted");
+						functionThread.detach();
+					}
+				}
+
+				if (newFileDirectories.size() != 0 && fileDirectoryDeleteFunctionEnable) {
+					if (functionOnNewFileChange) {
+						createNewFunctionThreadD(functionOnNewFileChange);
+					}
+					else {
+						thread functionThread = thread(&FileWatcher::displayData, this, newFileDirectories, "New");
+						functionThread.detach();
+					}
+				}
+
+				if (modifedFileDirectories.size() != 0 && fileDirectoryModifiedFunctionEnable) {
+					if (functionOnModifiedFileChange) {
+						createNewFunctionThreadD(functionOnModifiedFileChange);
+					}
+					else {
+						thread functionThread = thread(&FileWatcher::displayData, this, modifedFileDirectories, "Modified");
+						functionThread.detach();
+					}
+				}
+			}
+
+			//Delay thread for processing
+			this_thread::sleep_for(chrono::seconds(delayTime));
+		}
 	}
 };
 
