@@ -25,5 +25,6 @@
   <ItemGroup>
     <Text Include="Test\file1.txt" />
     <Text Include="Test\file2.txt" />
+    <Text Include="Test\file3.txt" />
   </ItemGroup>
 </Project>

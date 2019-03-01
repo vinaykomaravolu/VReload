@@ -76,10 +76,10 @@
     <IncludePath>C:\Users\Main\Desktop\Project\Reload\VReload\Include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\Users\Main\Desktop\Project\Reload\VReload\Include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Users\Vinay Komaravolu\Desktop\Project\VReload\Include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>C:\Users\Main\Desktop\Project\Reload\VReload\Include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Users\Vinay Komaravolu\Desktop\Project\VReload\Include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -132,6 +132,7 @@
   <ItemGroup>
     <Text Include="Test\file1.txt" />
     <Text Include="Test\file2.txt" />
+    <Text Include="Test\file3.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

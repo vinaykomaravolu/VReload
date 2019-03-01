@@ -75,10 +75,11 @@ public:
 		return pathWatch;
 	}
 
+	// ALways runs on seperate thread
 	void checkFilesForChange() {
 
 		//Delay thread for processing
-		this_thread::sleep_for(chrono::seconds(delayTime));
+		//this_thread::sleep_for(chrono::seconds(delayTime));
 
 		while (fileWatcherThreadEnable) {
 			// Temperarary data for file/directories write times, modified file/directories, deleted file/directories, and new file/directories
@@ -139,21 +140,18 @@ public:
 				}
 			}
 
-			
-
 			//Delay thread for processing
 			this_thread::sleep_for(chrono::seconds(delayTime));
 		}
-		fileWatcherThreadCreated = false;
 	}
 
 	
 
 	void execute() {
-		if (fileWatcherThreadCreated == false) {
+		if (!fileWatcherThreadCreated) {
 			fileWatcherThreadCreated = true;
-			cout << "Watching File: " << pathWatch << endl;
 			fileWatcherThreadEnable = true;
+			cout << "Watching File: " << pathWatch << endl;
 			fileWatcherThread = thread(&FileWatcher::checkFilesForChange, this);
 			fileWatcherThread.detach();
 		}
@@ -163,9 +161,15 @@ public:
 	}
 
 	void terminate() {
-		fileWatcherThreadEnable = false;
-		fileWatcherThreadCreated = false;
-		cout << "Stopped Watching: " << pathWatch << endl;
+		if (fileWatcherThreadCreated) {
+			fileWatcherThreadEnable = false;
+			fileWatcherThreadCreated = false;
+			cout << "Stopped Watching: " << pathWatch << endl;
+		}
+		else {
+			cout << "Already Stopped Watching: " << pathWatch << endl;
+		}
+		
 	}
 private:
 	void displayData(vector<fs::path> ddir, string title = "") {
@@ -196,20 +200,21 @@ private:
 //A file watcher manager
 class Watcher {
 public:
-	vector<FileWatcher> fileWatchers;
+	vector<FileWatcher *> fileWatchers;
 
 	Watcher() {
 		//Default Constructor
 	}
 
-	void watchFile(string pathWatch, function<int()> functionOnFileChange = NULL, int timeDelay = 1) {
-		fileWatchers.push_back(FileWatcher(pathWatch, functionOnFileChange, timeDelay));
+	void watchFile(string pathWatch, function<int()> functionOnFileChange = NULL,int timeDelay = 1) {
+		thread w = thread(&Watcher::_watchFile, this, pathWatch, functionOnFileChange, timeDelay);
+		w.detach();
 	}
 
 	void displayFileWatchers() {
 		cout << "Watching:" << endl;
 		for (int i = 0; i < fileWatchers.size(); i++) {
-			cout << "   [" << i << "]: " << fileWatchers[i].getPathName() << endl;
+			cout << "   [" << i << "]: " << fileWatchers[i]->getPathName() << endl;
 		}
 	}
 
@@ -217,18 +222,24 @@ public:
 		if (index < 0 && index < fileWatchers.size()) {
 			return;
 		}
-		cout << "[" << index << "]: " << fileWatchers[index].getPathName() << endl;
+		cout << "[" << index << "]: " << fileWatchers[index]->getPathName() << endl;
 	}
 
 	void executeAll() {
 		for (int i = 0; i < fileWatchers.size(); i++) {
-			fileWatchers[i].execute();
+			fileWatchers[i]->execute();
 		}
 	}
 
 	void terminateAll() {
 		for (int i = 0; i < fileWatchers.size(); i++) {
-			fileWatchers[i].terminate();
+			fileWatchers[i]->terminate();
 		}
+	}
+
+private:
+	void _watchFile(string pathWatch, function<int()> functionOnFileChange = NULL, int timeDelay = 1) {
+		fileWatchers.push_back(new FileWatcher(pathWatch, functionOnFileChange, timeDelay));
+		fileWatchers[fileWatchers.size() - 1]->execute();
 	}
 };
