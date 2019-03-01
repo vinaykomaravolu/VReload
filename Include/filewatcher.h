@@ -17,23 +17,7 @@ using namespace std::chrono_literals;
 
 class FileWatcher {
 public:
-	string pathWatch;
-	thread fileWatcherThread;
-	int delayTime; //In milliseconds
-	bool fileWatcherThreadEnable = false;
-	bool fileWatcherThreadCreated = false;
-	function<int()> functionOnFileChange;
-	function<int()> functionOnDeleteFileChange;
-	function<int()> functionOnNewFileChange;
-	function<int()> functionOnModifiedFileChange;
-	unordered_map<string, time_t> fileWriteTimes;
-	vector<fs::path> modifedFileDirectories;
-	vector<fs::path> deletedFileDirectories;
-	vector<fs::path> newFileDirectories;
-	bool fileDirectoryModifiedFunctionEnable = false;
-	bool fileDirectoryNewFunctionEnable = false;
-	bool fileDirectoryDeleteFunctionEnable = false;
-	bool fileDirectoryAllFunctionEnable = true;
+	
 
 
 	FileWatcher(string pathWatch, function<int()> functionOnFileChange ,int timeDelay) {
@@ -118,12 +102,16 @@ public:
 		if (!fileWatcherThreadCreated) {
 			fileWatcherThreadCreated = true;
 			fileWatcherThreadEnable = true;
-			cout << "Watching File: " << pathWatch << endl;
+			if (enableFileWatcherText) {
+				cout << "Watching File: " << pathWatch << endl;
+			}
 			fileWatcherThread = thread(&FileWatcher::checkFilesForChange, this);
 			fileWatcherThread.detach();
 		}
 		else {
-			cout << "Already Watching File: " << pathWatch << endl;
+			if (enableFileWatcherText) {
+				cout << "Already Watching File: " << pathWatch << endl;
+			}
 		}
 	}
 
@@ -131,14 +119,40 @@ public:
 		if (fileWatcherThreadCreated) {
 			fileWatcherThreadEnable = false;
 			fileWatcherThreadCreated = false;
-			cout << "Stopped Watching: " << pathWatch << endl;
+			if (enableFileWatcherText) {
+				cout << "Stopped Watching: " << pathWatch << endl;
+			}
 		}
 		else {
-			cout << "Already Stopped Watching: " << pathWatch << endl;
+			if (enableFileWatcherText) {
+				cout << "Already Stopped Watching: " << pathWatch << endl;
+			}
 		}
-		
+	}
+
+	void textEnable(bool enable=true) {
+		enableFileWatcherText = enable;
 	}
 private:
+	string pathWatch;
+	thread fileWatcherThread;
+	int delayTime; //In milliseconds
+	bool fileWatcherThreadEnable = false;
+	bool fileWatcherThreadCreated = false;
+	function<int()> functionOnFileChange;
+	function<int()> functionOnDeleteFileChange;
+	function<int()> functionOnNewFileChange;
+	function<int()> functionOnModifiedFileChange;
+	unordered_map<string, time_t> fileWriteTimes;
+	vector<fs::path> modifedFileDirectories;
+	vector<fs::path> deletedFileDirectories;
+	vector<fs::path> newFileDirectories;
+	bool fileDirectoryModifiedFunctionEnable = false;
+	bool fileDirectoryNewFunctionEnable = false;
+	bool fileDirectoryDeleteFunctionEnable = false;
+	bool fileDirectoryAllFunctionEnable = true;
+	bool enableFileWatcherText = false;
+
 	void displayData(vector<fs::path> ddir, string title = "") {
 		if (title != "") {
 			cout << title << ":" << endl;
@@ -210,8 +224,10 @@ private:
 					createNewFunctionThreadD(functionOnFileChange);
 				}
 				else {//If no function on file change being called then just prints the file that has changed!
-					thread functionThread = thread(&FileWatcher::displayAllData, this);
-					functionThread.detach();
+					if (enableFileWatcherText) {
+						thread functionThread = thread(&FileWatcher::displayAllData, this);
+						functionThread.detach();
+					}
 				}
 			}
 			else {
@@ -220,8 +236,11 @@ private:
 						createNewFunctionThreadD(functionOnDeleteFileChange);
 					}
 					else {
-						thread functionThread = thread(&FileWatcher::displayData, this, deletedFileDirectories, "Deleted");
-						functionThread.detach();
+						if (enableFileWatcherText) {
+							thread functionThread = thread(&FileWatcher::displayData, this, deletedFileDirectories, "Deleted");
+							functionThread.detach();
+						}
+						
 					}
 				}
 
@@ -230,8 +249,11 @@ private:
 						createNewFunctionThreadD(functionOnNewFileChange);
 					}
 					else {
-						thread functionThread = thread(&FileWatcher::displayData, this, newFileDirectories, "New");
-						functionThread.detach();
+						if (enableFileWatcherText) {
+							thread functionThread = thread(&FileWatcher::displayData, this, newFileDirectories, "New");
+							functionThread.detach();
+						}
+						
 					}
 				}
 
@@ -240,8 +262,10 @@ private:
 						createNewFunctionThreadD(functionOnModifiedFileChange);
 					}
 					else {
-						thread functionThread = thread(&FileWatcher::displayData, this, modifedFileDirectories, "Modified");
-						functionThread.detach();
+						if (enableFileWatcherText) {
+							thread functionThread = thread(&FileWatcher::displayData, this, modifedFileDirectories, "Modified");
+							functionThread.detach();
+						}
 					}
 				}
 			}
@@ -262,8 +286,10 @@ public:
 	}
 
 	void watchFile(string pathWatch, function<int()> functionOnFileChange = NULL,int timeDelay = 1) {
-		thread w = thread(&Watcher::_watchFile, this, pathWatch, functionOnFileChange, timeDelay);
-		w.detach();
+		/*thread w = thread(&Watcher::_watchFile, this, pathWatch, functionOnFileChange, timeDelay);
+		w.detach();*/
+		fileWatchers.push_back(new FileWatcher(pathWatch, functionOnFileChange, timeDelay));
+		fileWatchers[fileWatchers.size() - 1]->execute();
 	}
 
 	void displayFileWatchers() {
@@ -292,9 +318,12 @@ public:
 		}
 	}
 
-private:
-	void _watchFile(string pathWatch, function<int()> functionOnFileChange = NULL, int timeDelay = 1) {
-		fileWatchers.push_back(new FileWatcher(pathWatch, functionOnFileChange, timeDelay));
-		fileWatchers[fileWatchers.size() - 1]->execute();
+	void textEnable(bool enable=true) {
+		for (int i = 0; i < fileWatchers.size(); i++) {
+			fileWatchers[i]->textEnable(enable);
+		}
 	}
+
+private:
+	
 };

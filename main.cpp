@@ -74,7 +74,12 @@ int main() {
 	
 	Watcher w;
 	w.watchFile("Test");
-	
+	w.watchFile("Test");
+	w.watchFile("Test");
+	w.watchFile("Test");
+	w.watchFile("Test");
+	w.watchFile("Test");
+	w.textEnable();
 
 	this_thread::sleep_for(std::chrono::seconds(2));
 	w.displayFileWatchers();
