@@ -28,6 +28,9 @@ public:
 	bool fileWatcherThreadEnable = false;
 	bool fileWatcherThreadCreated = false;
 	function<int()> functionOnFileChange;
+	function<int()> functionOnDeleteFileChange;
+	function<int()> functionOnNewFileChange;
+	function<int()> functionOnModifiedFileChange;
 	unordered_map<string, time_t> fileWriteTimes;
 	vector<fs::path> modifedFileDirectories;
 	vector<fs::path> deletedFileDirectories;
