@@ -15,11 +15,6 @@ using namespace std;
 namespace fs = experimental::filesystem;
 using namespace std::chrono_literals;
 
-struct Params {
-
-};
-
-
 class FileWatcher {
 public:
 	string pathWatch;
@@ -131,6 +126,7 @@ public:
 			}
 			else {
 				if (deletedFileDirectories.size() != 0 && fileDirectoryDeleteFunctionEnable) {
+					
 					displayData(deletedFileDirectories, "Deleted");
 				}
 
