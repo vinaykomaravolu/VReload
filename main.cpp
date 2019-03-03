@@ -72,7 +72,7 @@ int main() {
 	this_thread::sleep_for(std::chrono::seconds(50));
 	*/
 	
-	Watcher w;
+	FDWatcher::Watcher w;
 	w.watchFile("Test");
 	w.watchFile("Test");
 	w.watchFile("Test");
