@@ -13,9 +13,12 @@
 using namespace std;
 namespace fs = experimental::filesystem;
 using namespace std::chrono_literals;
-
 namespace FDWatcher
 {
+	struct params {
+		// Create your own custom parameters
+	};
+
 class FileWatcher
 {
   public:
@@ -355,7 +358,7 @@ class Watcher
 
 	void displayFileWatcher(int index)
 	{
-		if (index < 0 && index < fileWatchers.size())
+		if (index < 0 || index >= fileWatchers.size())
 		{
 			return;
 		}
@@ -364,7 +367,7 @@ class Watcher
 
 	void watcherOnAllChangeFunction(int index, function<int()> function)
 	{
-		if (index < 0 && index < fileWatchers.size())
+		if (index < 0 || index >= fileWatchers.size())
 		{
 			return;
 		}
@@ -384,7 +387,7 @@ class Watcher
 
 	void watcherOnNewFunction(int index, function<int()> function)
 	{
-		if (index < 0 && index < fileWatchers.size())
+		if (index < 0 || index >= fileWatchers.size())
 		{
 			return;
 		}
@@ -404,7 +407,7 @@ class Watcher
 
 	void watcherOnDeleteFunction(int index, function<int()> function)
 	{
-		if (index < 0 && index < fileWatchers.size())
+		if (index < 0 || index >= fileWatchers.size())
 		{
 			return;
 		}
@@ -424,7 +427,7 @@ class Watcher
 
 	void watcherOnModifiedFunction(int index, function<int()> function)
 	{
-		if (index < 0 && index < fileWatchers.size())
+		if (index < 0 || index >= fileWatchers.size())
 		{
 			return;
 		}
@@ -443,7 +446,7 @@ class Watcher
 	}
 
 	void watcherOnAllChangeFunctionEnable(int index) {
-		if (index < 0 && index < fileWatchers.size())
+		if (index < 0 || index >= fileWatchers.size())
 		{
 			return;
 		}
@@ -461,7 +464,7 @@ class Watcher
 	}
 
 	void watcherOnNewFunctionEnable(int index) {
-		if (index < 0 && index < fileWatchers.size())
+		if (index < 0 || index >= fileWatchers.size())
 		{
 			return;
 		}
@@ -479,7 +482,7 @@ class Watcher
 	}
 
 	void watcherOnDeletedFunctionEnable(int index) {
-		if (index < 0 && index < fileWatchers.size())
+		if (index < 0 || index >= fileWatchers.size())
 		{
 			return;
 		}
@@ -497,7 +500,7 @@ class Watcher
 	}
 
 	void watcherOnModifiedFunctionEnable(int index) {
-		if (index < 0 && index < fileWatchers.size())
+		if (index < 0 || index >= fileWatchers.size())
 		{
 			return;
 		}
@@ -515,7 +518,7 @@ class Watcher
 	}
 
 	void execute(int index){
-		if (index < 0 && index < fileWatchers.size())
+		if (index < 0 || index >= fileWatchers.size())
 		{
 			return;
 		}
@@ -540,7 +543,7 @@ class Watcher
 		}
 	}
 	void terminate(int index) {
-		if (index < 0 && index < fileWatchers.size())
+		if (index < 0 || index >= fileWatchers.size())
 		{
 			return;
 		}
@@ -565,7 +568,25 @@ class Watcher
 		}
 	}
 
-	void textEnable(bool enable = true)
+	void textEnable(int index, bool enable = true) {
+		if (index < 0 || index >= fileWatchers.size())
+		{
+			return;
+		}
+		fileWatchers[index]->textEnable(enable);
+	}
+
+	void textEnable(string path, bool enable = true) {
+		for (int i = 0; i < fileWatchers.size(); i++)
+		{
+			if (fileWatchers[i]->getPathName() == path) {
+				fileWatchers[i]->textEnable(enable);
+				break;
+			}
+		}
+	}
+
+	void textEnableAll(bool enable = true)
 	{
 		for (int i = 0; i < fileWatchers.size(); i++)
 		{

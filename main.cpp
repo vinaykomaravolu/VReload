@@ -3,88 +3,49 @@
 #include <thread>
 #include <chrono>
 #include <functional>
+#include <fstream>
 
 
-//Thread Testing
-class A {
-public:
-	int a;
-	bool terminateThread;
-	std::thread t1;
-	A(int x) {
-		terminateThread = true;
-		a = x;
+void createDirectoryHelper(fs::path path) {
+	if (!fs::exists(path) || !fs::is_directory(path)) {
+		fs::create_directory(path);
 	}
+}
 
-	void printInf() {
-		while (!terminateThread) {
-			this_thread::sleep_for(std::chrono::milliseconds(100));
-			std::cout << a << std::endl;
-		}
+void createFileHelper(fs::path path) {
+	if (!fs::exists(path) || !fs::is_regular_file(path)) {
+		ofstream newFile;
+		cout << path.filename();
+		newFile.open(path.string().c_str());
 	}
-
-	void execute() {
-		terminateThread = false;
-		std::thread(&A::printInf,this);
-	}
-
-	void destroy() {
-		terminateThread = true;
-	}
-};
-
-int a() {
-	while (true) {
-		this_thread::sleep_for(std::chrono::seconds(2));
-		cout << this_thread::get_id() << endl;
-	}
-	return 0;
-};
-
-
-
-
-void test(std::function<int()> b) {
-	if (b) {
-		b();
-	}
-};
+}
 
 int main() {
-	/*string filePath;
-	FileWatcher fw("C:\\Users\\Main\\Desktop\\Project\\Reload\\VReload\\Test",1);
-	FileWatcher fw2("C:\\Users\\Main\\Desktop\\Test",1);
-	A b(10);
-	A c(2);
-	
-	fw.execute();
-	this_thread::sleep_for(std::chrono::seconds(2));
+	fs::path currentDirectory("Test");
+	fs::path includeDirectory(currentDirectory.string() + "/include");
+	fs::path binDirectory(currentDirectory.string() + "/bin");
+	fs::path libDirectory(currentDirectory.string() + "/lib");
+	fs::path srcDirectory(currentDirectory.string() + "/src");
+	fs::path makeFile(currentDirectory.string() + "/Makefile");
 
-	fw.execute();
-	this_thread::sleep_for(std::chrono::seconds(2));
-	fw2.execute();
+	createDirectoryHelper(includeDirectory);
+	createDirectoryHelper(binDirectory);
+	createDirectoryHelper(libDirectory);
+	createDirectoryHelper(srcDirectory);
+	createFileHelper(makeFile);
 
-	this_thread::sleep_for(std::chrono::seconds(2));
-	fw.terminate();
-	this_thread::sleep_for(std::chrono::seconds(2));
-	fw.execute();
-
-	this_thread::sleep_for(std::chrono::seconds(50));
-	*/
-	
 	FDWatcher::Watcher w;
-	w.watchFile("Test");
-	w.watchFile("Test");
-	w.watchFile("Test");
-	w.watchFile("Test");
-	w.watchFile("Test");
-	w.watchFile("Test");
-	w.textEnable();
+	
+
+
+	
+	w.textEnableAll();
 
 	this_thread::sleep_for(std::chrono::seconds(2));
 	w.displayFileWatchers();
-
-	this_thread::sleep_for(std::chrono::seconds(50));
+	while (true) {
+		this_thread::sleep_for(std::chrono::seconds(50));
+	}
 	return 0;
 }
 
