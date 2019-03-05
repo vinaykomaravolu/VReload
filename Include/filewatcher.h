@@ -347,6 +347,8 @@ class Watcher
 		fileWatchers[fileWatchers.size() - 1]->execute();
 	}
 
+
+
 	void displayFileWatchers()
 	{
 		cout << "Watching:" << endl;
