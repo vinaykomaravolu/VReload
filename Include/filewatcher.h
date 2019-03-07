@@ -230,6 +230,7 @@ class FileWatcher
 				tempfileWriteTimes.insert(make_pair(currentPath.string(), currentLastWriteTime));
 				if (fileWriteTimes.count(currentPath.string()) == 0)
 				{ // New File/Directories
+
 					tempNewFileDirectories.push_back(currentPath);
 				}
 				else
@@ -237,6 +238,7 @@ class FileWatcher
 					time_t previousLastWriteTime = fileWriteTimes[currentPath.string()];
 					if (previousLastWriteTime != currentLastWriteTime)
 					{
+
 						tempModifedFileDirectories.push_back(currentPath);
 					}
 				}
@@ -260,6 +262,7 @@ class FileWatcher
 				if (functionOnFileChange)
 				{
 					createNewFunctionThreadD(functionOnFileChange);
+					
 				}
 				else
 				{ //If no function on file change being called then just prints the file that has changed!

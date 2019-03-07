@@ -8,6 +8,7 @@
 #define MAKEFILE "CC		:= g++\nC_FLAGS := -std=c++17 -Wall -Wextra\n\nBIN		:= bin\nSRC		:= src\nINCLUDE	:= include\nLIB		:= lib\n\nLIBRARIES	:=\n\nifeq ($(OS),Windows_NT)\nEXECUTABLE	:= main.exe\nelse\nEXECUTABLE	:= main\nendif\n\nall: $(BIN)/$(EXECUTABLE)\n\nclean:\n	$(RM) $(BIN)/$(EXECUTABLE)\n\nrun: all\n	./$(BIN)/$(EXECUTABLE)\n\n$(BIN)/$(EXECUTABLE): $(SRC)/*\n	$(CC) $(C_FLAGS) -I$(INCLUDE) -L$(LIB) $^ -o $@ $(LIBRARIES)"
 #define SIMPLEMAINFILE "#include <iostream>\nusing namespace std;\n\nint main(){\n\n\n}"
 
+// Process Currently Running
 
 void createDirectoryHelper(fs::path path) {
 	if (!fs::exists(path) || !fs::is_directory(path)) {
@@ -25,30 +26,64 @@ void createFileHelper(fs::path path,string textToAdd) {
 }
 
 int makeProject() {
-	STARTUPINFO si;
-	PROCESS_INFORMATION pi;
+	STARTUPINFO siBat;
+	PROCESS_INFORMATION piBat;
 
-	ZeroMemory(&si, sizeof(si));
-	si.cb = sizeof(si);
-	ZeroMemory(&pi, sizeof(pi));
+	ZeroMemory(&siBat, sizeof(siBat));
+	siBat.cb = sizeof(siBat);
+	ZeroMemory(&piBat, sizeof(piBat));
 	if (!CreateProcess(NULL,
-		(LPSTR)"cmd /C  run.bat",
+		(LPSTR)"run.bat",
 		NULL,
 		NULL,
 		FALSE,
 		0,
 		NULL,
 		NULL,
-		&si,
-		&pi)
+		&siBat,
+		&piBat)
 		)
 	{
 		printf("CreateProcess failed (%d)\n", GetLastError());
 		return FALSE;
 	}
-	WaitForSingleObject(pi.hProcess, INFINITE);
-	CloseHandle(pi.hProcess);
-	CloseHandle(pi.hThread);
+	cout << piBat.dwProcessId << endl;
+	WaitForSingleObject(piBat.hProcess,INFINITE);
+	CloseHandle(piBat.hProcess);
+	CloseHandle(piBat.hThread);
+
+	STARTUPINFO siExec;
+	PROCESS_INFORMATION piExec;
+
+	ZeroMemory(&siExec, sizeof(siExec));
+	siExec.cb = sizeof(siExec);
+	ZeroMemory(&piExec, sizeof(piExec));
+
+	// Checking to see if the exe is created or failed
+	fs::path currentDirectory = fs::current_path();
+	fs::path exeFile(currentDirectory.string() + "\\bin\\main.exe");
+	if (fs::exists(exeFile)) {
+		if (!CreateProcess(NULL,
+			(LPSTR)"bin\\main.exe",
+			NULL,
+			NULL,
+			FALSE,
+			0,
+			NULL,
+			NULL,
+			&siExec,
+			&piExec)
+			)
+		{
+			printf("CreateProcess failed (%d)\n", GetLastError());
+			return FALSE;
+		}
+		cout << piExec.dwProcessId << endl;
+		WaitForSingleObject(piExec.hProcess, INFINITE);
+		CloseHandle(piExec.hProcess);
+		CloseHandle(piExec.hThread);
+		
+	}
 	return 0;
 }
 
@@ -70,10 +105,12 @@ int main() {
 	createDirectoryHelper(srcDirectory);
 	createFileHelper(makeFile, MAKEFILE);
 	createFileHelper(mainFile, SIMPLEMAINFILE);
-	createFileHelper(batFILE, "mingw32-make\nbin\\main.exe");
+	createFileHelper(batFILE, "mingw32-make\nIF \"%ERRORLEVEL%\" == \"0\" (\n\tbin\\main.exe\n)");
 
 	FDWatcher::Watcher w;
-	w.watchFile(currentDirectory.string(), makeProject);
+	w.watchFile(currentDirectory.string() + "\\src", makeProject);
+	w.watchFile(currentDirectory.string() + "\\include", makeProject);
+	w.watchFile(currentDirectory.string() + "\\lib", makeProject);
 
 	w.textEnableAll();
 
