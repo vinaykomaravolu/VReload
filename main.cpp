@@ -52,12 +52,13 @@ int makeProject() {
 		ZeroMemory(&siBat, sizeof(siBat));
 		siBat.cb = sizeof(siBat);
 		ZeroMemory(&piBat, sizeof(piBat));
+		cout << "------------------------------COMPILING------------------------------" << endl;
 		if (!CreateProcess(NULL,
 			(LPSTR)"run.bat",
 			NULL,
 			NULL,
 			FALSE,
-			CREATE_NO_WINDOW,
+			0,
 			NULL,
 			NULL,
 			&siBat,
@@ -71,7 +72,7 @@ int makeProject() {
 		CloseHandle(piBat.hProcess);
 		CloseHandle(piBat.hThread);
 		batchProcessRunning = false;
-
+		cout << "\n---------------------------------RUN---------------------------------\n" << endl;
 
 		// Executable Process
 		STARTUPINFO siExec;
